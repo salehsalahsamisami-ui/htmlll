@@ -1,0 +1,64 @@
+{
+  "categories": [
+    {
+      "id": 1,
+      "name": "إلكترونيات",
+      "icon": "fas fa-laptop",
+      "color": "#2e7d32"
+    },
+    {
+      "id": 2,
+      "name": "ملابس وأحذية",
+      "icon": "fas fa-tshirt",
+      "color": "#2196f3"
+    },
+    {
+      "id": 3,
+      "name": "أجهزة منزلية",
+      "icon": "fas fa-blender",
+      "color": "#ff9800"
+    },
+    {
+      "id": 4,
+      "name": "أثاث",
+      "icon": "fas fa-couch",
+      "color": "#795548"
+    },
+    {
+      "id": 5,
+      "name": "مستلزمات الأطفال",
+      "icon": "fas fa-baby",
+      "color": "#e91e63"
+    },
+    {
+      "id": 6,
+      "name": "الجمال والعناية",
+      "icon": "fas fa-spa",
+      "color": "#9c27b0"
+    },
+    {
+      "id": 7,
+      "name": "الكل",
+      "icon": "fas fa-th-large",
+      "color": "#2e7d32"
+    },
+    {
+      "id": 8,
+      "name": "لوازم السيارات",
+      "icon": "fas fa-car",
+      "color": "#f44336"
+    },
+    {
+      "id": 9,
+      "name": "الرياضة",
+      "icon": "fas fa-futbol",
+      "color": "#4caf50"
+    },
+    {
+      "id": 10,
+      "name": "متنوع",
+      "icon": "fas fa-ellipsis-h",
+      "color": "#607d8b"
+    }
+  ]
+}
