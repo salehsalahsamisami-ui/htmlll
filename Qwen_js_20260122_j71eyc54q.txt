@@ -1,0 +1,16 @@
+const CONFIG = {
+  PRODUCTS_API: "https://script.google.com/macros/s/AKfycbxrKrnkUhsNcKTLqbnYC6wWiDBZYNb1A1lTm0VDNsD5HajIqvajt2Q-xdROmmfakQWSvA/exec",
+  WILAYAS_URL: "https://cdn.jsdelivr.net/gh/salehsalahsamisami-ui/baladiya@main/algeria_cities.json",
+  DELIVERY_FEES_FILE: "data/delivery_fees.json",
+  ORDER_FORM_ACTION: "https://docs.google.com/forms/u/0/d/e/1FAIpQLScmagCuscYo3PB4BRb_i05E_ViheLnqGy7_CjAMidFpKC3diw/formResponse",
+  FORM_FIELDS: {
+    NAME: "entry.1109585712",
+    PHONE: "entry.660701684",
+    WILAYA: "entry.57256624",
+    ADDRESS: "entry.1062178774",
+    ITEMS: "entry.1793141842",
+    TOTAL: "entry.1240304771",
+    NOTES: "entry.340819348",
+    PAYMENT: "entry.1409510339"
+  }
+};

@@ -1,0 +1,35 @@
+let allProducts = [];
+
+async function loadProducts() {
+  try {
+    const res = await fetch(CONFIG.PRODUCTS_API);
+    if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+    const data = await res.json();
+    if (!Array.isArray(data)) throw new Error("البيانات ليست مصفوفة");
+    allProducts = data.filter(p =>
+      p.id && p.name && typeof p.price === 'number' && p.category && p.image
+    );
+    renderProducts(allProducts);
+  } catch (err) {
+    console.error("فشل تحميل المنتجات:", err);
+    document.getElementById('products-container').innerHTML = '<p style="text-align:center;color:red;">خطأ في تحميل المنتجات. الرجاء المحاولة لاحقاً.</p>';
+  }
+}
+
+function renderProducts(products) {
+  const container = document.getElementById('products-container');
+  if (products.length === 0) {
+    container.innerHTML = '<p style="text-align:center;">لا توجد منتجات متاحة في هذا القسم.</p>';
+    return;
+  }
+  container.innerHTML = products.map(p => `
+    <div class="product-card">
+      <img src="${p.image}" alt="${p.name}" class="product-img" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22250%22 height=%22180%22><rect width=%22100%%22 height=%22100%%22 fill=%22%23eee%22/><text x=%2250%%22 y=%2250%%22 fill=%22%23999%22 font-size=%2216%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22>صورة غير متاحة</text></svg>'">
+      <div class="product-info">
+        <div class="product-name">${p.name}</div>
+        <div class="product-price">${p.price.toLocaleString()} دج</div>
+        <button class="btn-add" onclick="addToCart(${JSON.stringify(p).replace(/"/g, '&quot;')})">إضافة إلى السلة</button>
+      </div>
+    </div>
+  `).join('');
+}

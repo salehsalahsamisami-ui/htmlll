@@ -1,0 +1,21 @@
+async function loadWilayas() {
+  try {
+    const res = await fetch(CONFIG.WILAYAS_URL);
+    const data = await res.json();
+    return data.map(w => ({ code: w.code, name: w.name }));
+  } catch (err) {
+    console.error("فشل تحميل الولايات:", err);
+    return [];
+  }
+}
+
+function populateWilayasSelect(wilayas) {
+  const select = document.getElementById('wilaya');
+  select.innerHTML = '<option value="">اختر الولاية</option>';
+  wilayas.forEach(w => {
+    const opt = document.createElement('option');
+    opt.value = w.name;
+    opt.textContent = w.name;
+    select.appendChild(opt);
+  });
+}

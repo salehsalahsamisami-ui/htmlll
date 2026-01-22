@@ -1,0 +1,179 @@
+// سلة التسوق
+let cart = [];
+let deliveryFees = {};
+
+// تحميل أسعار التوصيل
+async function loadDeliveryFees() {
+  try {
+    const res = await fetch(CONFIG.DELIVERY_FEES_FILE);
+    deliveryFees = await res.json();
+  } catch (err) {
+    console.error("فشل تحميل أسعار التوصيل:", err);
+    deliveryFees = {};
+  }
+}
+
+// عرض الأقسام
+function renderCategories() {
+  const container = document.getElementById('categories-container');
+  container.innerHTML = CATEGORIES.map(cat => 
+    `<button class="category-btn" onclick="filterByCategory('${cat.name}')">${cat.name}</button>`
+  ).join('');
+  // عرض جميع المنتجات عند البدء
+  filterByCategory(null);
+}
+
+// تصفية المنتجات حسب القسم
+function filterByCategory(categoryName) {
+  const filtered = categoryName ? allProducts.filter(p => p.category === categoryName) : allProducts;
+  renderProducts(filtered);
+  // تحديث حالة الأزرار
+  document.querySelectorAll('.category-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.textContent === categoryName);
+  });
+}
+
+// إضافة منتج إلى السلة
+function addToCart(product) {
+  cart.push(product);
+  showCartSection();
+}
+
+// عرض قسم السلة
+function showCartSection() {
+  const section = document.getElementById('cart-section');
+  section.classList.remove('hidden');
+  updateOrderSummary();
+}
+
+// تحديث ملخص الطلب
+function updateOrderSummary() {
+  const summaryEl = document.getElementById('orderSummary');
+  const totalEl = document.getElementById('totalAmount');
+  
+  let itemsText = '';
+  let subtotal = 0;
+  
+  const itemCount = {};
+  cart.forEach(item => {
+    itemCount[item.name] = (itemCount[item.name] || 0) + 1;
+    subtotal += item.price;
+  });
+  
+  for (const name in itemCount) {
+    const price = cart.find(p => p.name === name).price;
+    itemsText += `${name} - ${price.toLocaleString()} دج × ${itemCount[name]}\n`;
+  }
+  
+  summaryEl.value = itemsText.trim();
+  
+  // سيتم تحديث الإجمالي عند اختيار الولاية
+  const wilayaName = document.getElementById('wilaya').value;
+  let deliveryFee = 0;
+  if (wilayaName) {
+    const wilayaCode = Object.entries(deliveryFees).find(([code, fee]) => {
+      // محاولة مطابقة الكود بالاسم (قد تحتاج تعديل إذا كان JSON مختلفاً)
+      // هنا نفترض أن delivery_fees.json يستخدم نفس أسماء الولايات
+      return true;
+    });
+    // بدلاً من ذلك، سنستخدم البحث بالاسم لاحقاً بعد تحميل الولايات
+  }
+  totalEl.value = (subtotal + deliveryFee).toLocaleString() + ' دج';
+}
+
+// عند تغيير الولاية
+document.getElementById('wilaya')?.addEventListener('change', function() {
+  updateTotalWithDelivery();
+});
+
+function updateTotalWithDelivery() {
+  const wilayaName = document.getElementById('wilaya').value;
+  if (!wilayaName) return;
+
+  // البحث عن كود الولاية من قائمة الولايات المحملة
+  const selectedWilaya = window.loadedWilayas?.find(w => w.name === wilayaName);
+  let deliveryFee = 0;
+  if (selectedWilaya && deliveryFees[selectedWilaya.code]) {
+    deliveryFee = deliveryFees[selectedWilaya.code];
+  }
+
+  const subtotal = cart.reduce((sum, item) => sum + item.price, 0);
+  const total = subtotal + deliveryFee;
+  document.getElementById('totalAmount').value = total.toLocaleString() + ' دج';
+}
+
+// إرسال الطلب
+document.getElementById('submitOrder')?.addEventListener('click', async function() {
+  const name = document.getElementById('customerName').value.trim();
+  const phone = document.getElementById('phone').value.trim();
+  const wilaya = document.getElementById('wilaya').value;
+  const address = document.getElementById('address').value.trim();
+  const notes = document.getElementById('notes').value.trim();
+
+  if (!name || !phone || !wilaya || !address) {
+    alert('يرجى ملء جميع الحقول المطلوبة.');
+    return;
+  }
+
+  // بناء نص المنتجات
+  const itemCount = {};
+  cart.forEach(item => {
+    itemCount[item.name] = (itemCount[item.name] || 0) + 1;
+  });
+  let itemsText = '';
+  for (const name in itemCount) {
+    const price = cart.find(p => p.name === name).price;
+    itemsText += `${name} (${price.toLocaleString()} دج) × ${itemCount[name]}\n`;
+  }
+
+  // حساب الإجمالي النهائي
+  const selectedWilaya = window.loadedWilayas?.find(w => w.name === wilaya);
+  let deliveryFee = selectedWilaya && deliveryFees[selectedWilaya.code] ? deliveryFees[selectedWilaya.code] : 0;
+  const subtotal = cart.reduce((sum, item) => sum + item.price, 0);
+  const total = subtotal + deliveryFee;
+
+  // إعداد بيانات النموذج
+  const formData = {
+    [CONFIG.FORM_FIELDS.NAME]: name,
+    [CONFIG.FORM_FIELDS.PHONE]: phone,
+    [CONFIG.FORM_FIELDS.WILAYA]: wilaya,
+    [CONFIG.FORM_FIELDS.ADDRESS]: address,
+    [CONFIG.FORM_FIELDS.ITEMS]: itemsText.trim(),
+    [CONFIG.FORM_FIELDS.TOTAL]: total.toString(),
+    [CONFIG.FORM_FIELDS.NOTES]: notes,
+    [CONFIG.FORM_FIELDS.PAYMENT]: "نقدًا عند الاستلام"
+  };
+
+  const btn = document.getElementById('submitOrder');
+  btn.disabled = true;
+  btn.textContent = 'جاري إرسال الطلب...';
+
+  try {
+    await fetch(CONFIG.ORDER_FORM_ACTION, {
+      method: "POST",
+      mode: "no-cors",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams(formData).toString()
+    });
+    alert('تم إرسال طلبك بنجاح! سنقوم بالتواصل معك قريباً.');
+    // إعادة تعيين السلة
+    cart = [];
+    document.getElementById('cart-section').classList.add('hidden');
+    btn.disabled = false;
+    btn.textContent = 'تأكيد الطلب';
+  } catch (err) {
+    alert('حدث خطأ أثناء إرسال الطلب. الرجاء المحاولة مرة أخرى.');
+    btn.disabled = false;
+    btn.textContent = 'تأكيد الطلب';
+  }
+});
+
+// التشغيل عند التحميل
+document.addEventListener('DOMContentLoaded', async () => {
+  await loadDeliveryFees();
+  renderCategories();
+  await loadProducts();
+  const wilayas = await loadWilayas();
+  window.loadedWilayas = wilayas; // حفظها لاستخدامها لاحقاً
+  populateWilayasSelect(wilayas);
+});
